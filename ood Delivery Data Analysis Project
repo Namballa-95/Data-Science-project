@@ -1,0 +1,40 @@
+Food Delivery Data Analysis Project
+
+Author: N. Bharath
+
+Project Overview: This project analyzes food delivery data from CSV, JSON, and SQL files. The datasets are merged using Python and Pandas to extract business insights.
+
+Files: - orders.csv - users.json - restaurants.sql - final_food_delivery_dataset.csv
+
+Tools: Python, Pandas, SQLite, Jupyter Notebook
+
+Code:
+import pandas as pd import sqlite3 import json
+orders = pd.read_csv("orders.csv")
+--------------------------------------------------------------------------------------------------------------------------
+with open("users.json") as f:     users = pd.DataFrame(json.load(f))
+conn = sqlite3.connect(":memory:")
+with open("restaurants.sql") as f:     sql_script = f.read()
+conn.executescript(sql_script)
+---------------------------------------------------------------------------------------------------------------------------
+restaurants = pd.read_sql_query("SELECT * FROM restaurants", conn)
+final_df = orders.merge(users, on="user_id", how="left")                  .merge(restaurants, on="restaurant_id", how="left")
+final_df.to_csv("final_food_delivery_dataset.csv", index=False)
+final_df["order_date"] = pd.to_datetime(final_df["order_date"], dayfirst=True)
+----------------------------------------------------------------------------------------------------------------------------
+# Analysis
+# City with highest Gold revenue final_df[final_df["membership"]=="Gold"].groupby("city")["total_amount"].sum().idxmax()
+# Highest average cuisine final_df.groupby("cuisine")["total_amount"].mean().idxmax()
+# Users spending >1000 (final_df.groupby("user_id")["total_amount"].sum() > 1000).sum()
+# Rating ranges bins = [3.0,3.5,4.0,4.5,5.0] labels = ["3.0–3.5","3.6–4.0","4.1–4.5","4.6–5.0"]
+final_df["rating_range"] = pd.cut(final_df["rating"], bins=bins, labels=labels)
+----------------------------------------------------------------------------------------------------------------------------
+# Numerical Analysis
+gold_orders = final_df[final_df["membership"]=="Gold"].shape[0]
+hyd_revenue = round(final_df[final_df["city"]=="Hyderabad"]["total_amount"].sum())
+distinct_users = final_df["user_id"].nunique()
+gold_avg = round(final_df[final_df["membership"]=="Gold"]["total_amount"].mean(),2)
+rating_orders = final_df[final_df["rating"]>=4.5].shape[0]
+top_city = final_df[final_df["membership"]=="Gold"].groupby("city")["total_amount"].sum().idxmax()
+top_city_orders = final_df[(final_df["membership"]=="Gold") & (final_df["city"]==top_city)].shape[0]
+Submission Checklist: - Repository Public - All files uploaded - Notebook working - Link verified 
